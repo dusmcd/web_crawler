@@ -26,6 +26,55 @@ export function getURLsFromHTML(html, baseURL) {
             absoluteUrls.push(`${baseURL}${link.href}`)
         }
     });
-    console.log(absoluteUrls);
     return absoluteUrls;
+}
+
+async function fetchHTML(url) {
+    const response = await fetch(url, {
+        method: "GET",
+        mode: "cors"
+    });
+
+    if (response.status >= 400) {
+        console.log(`The webpage at ${url} returned an error`)
+        return;
+    }
+
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType.split(";").includes("text/html")) {
+        console.log(`The webpage at ${url} did not return text or html`)
+        return
+    }
+    return response.text();
+    
+}
+
+export async function crawlPage(baseUrl, currentUrl=baseUrl, pages={}) {
+    const baseDomain = new URL(baseUrl).host;
+    const currentDomain = new URL(currentUrl).host;
+
+    if (baseDomain !== currentDomain) return pages;
+
+    const normalizedCurrentUrl = normalizeUrl(currentUrl);
+    if (Object.hasOwn(pages, normalizedCurrentUrl)) {
+        pages[normalizedCurrentUrl] += 1;
+        return pages;
+    }
+    else {
+        pages[normalizedCurrentUrl] = 1;
+    }
+    try {
+        const html = await fetchHTML(currentUrl);
+        if (html) {
+            const links = getURLsFromHTML(html, baseUrl);
+            links.forEach(link => {
+                crawlPage(baseUrl, link, pages);
+            });
+
+        }
+        return pages;
+
+    } catch(err) {
+        console.log(err.message);
+    }
 }
