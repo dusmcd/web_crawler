@@ -1,4 +1,5 @@
 import { crawlPage } from "./crawl.js";
+import { printReport } from "./report.js";
 
 async function main() {
     try {
@@ -6,7 +7,7 @@ async function main() {
             const url = process.argv[2];
             console.log(`Crawling at ${url}`)
             const pages = await crawlPage(url);
-            console.log(pages); 
+            printReport(pages); 
         }
         else if (process.argv.length > 3) {
             throw new Error("Too many arguments. You can only supply one url");
